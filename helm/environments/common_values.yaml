@@ -1,0 +1,4 @@
+namespace: altyn
+
+myApp:
+  enabled: true

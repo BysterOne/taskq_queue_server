@@ -1,0 +1,97 @@
+---
+fullNameOverride: altyn-moneta-processing
+
+replicaCount: {{ .Values.replicaCount | default 1 }}
+terminationGracePeriodSeconds: 80
+
+servicePorts:
+  - targetPort: &targetPort 8000
+    servicePort: &servicePort 80
+
+x-api-container: &base-container
+  image: {{ requiredEnv "IMAGE_NAME" }}
+  resources:
+    requests:
+      cpu: 250m
+      memory: 250Mi
+    limits:
+      memory: 1Gi
+  env:
+    {{- range $key, $value := .Values.env }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+    {{- range $key, $value := .Values.secrets.env }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+    IMAGE_NAME: {{ requiredEnv "IMAGE_NAME" }}
+
+statsd:
+  enabled: true
+
+rabbitmqResources:
+  enabled: true
+  username: {{ .Values.env.CELERY_BROKER_USER | quote }}
+  vhost: {{ .Values.env.CELERY_BROKER_VHOST | quote }}
+  clusterReferenceName: altyn-cluster
+  clusterReferenceNamespace: infra
+
+secrets:
+  rabbitmq:
+    data:
+      username: {{ .Values.env.CELERY_BROKER_USER | quote }}
+      password: {{ .Values.secrets.env.CELERY_BROKER_PASSWORD | quote }}
+
+containers:
+  app:
+    <<: *base-container
+    command: [ "gunicorn" ]
+    args: ["--conf", "gunicorn.conf.py"]
+    livenessProbe:
+      failureThreshold: 3
+      httpGet:
+        path: /-/healthz/
+        port: *targetPort
+        scheme: HTTP
+      periodSeconds: 20
+      successThreshold: 1
+      timeoutSeconds: 10
+    readinessProbe:
+      failureThreshold: 3
+      httpGet:
+        path: /-/readyz/
+        port: *targetPort
+        scheme: HTTP
+      periodSeconds: 30
+      successThreshold: 1
+      timeoutSeconds: 10
+    startupProbe:
+      failureThreshold: 30
+      httpGet:
+        path: /-/startup/
+        port: *targetPort
+        scheme: HTTP
+      periodSeconds: 5
+      successThreshold: 1
+      timeoutSeconds: 2
+
+ingress:
+  enabled: true
+  ingresses:
+    nginx:
+      ingressClassName: internal-and-public
+      annotations:
+        nginx.ingress.kubernetes.io/rewrite-target: /
+      rules:
+        - host: {{ .Values.env.VIRTUAL_HOST }}
+          servicePort: *servicePort
+          paths:
+            - path: /
+      tls:
+        - hosts:
+          - {{ .Values.env.VIRTUAL_HOST }}
+
+networkPolicy:
+  enabled: false
+
+imagePullSecrets:
+  - name: regcreds-moon
