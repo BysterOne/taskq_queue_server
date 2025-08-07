@@ -10,7 +10,7 @@ class Event:
         # noinspection PyBroadException
         try:
             self.handlers.remove(handler)
-        except:
+        except Exception:
             pass
         return self
 

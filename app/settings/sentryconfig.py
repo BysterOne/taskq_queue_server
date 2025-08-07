@@ -1,4 +1,3 @@
-import logging
 import os
 from typing import Any
 
@@ -6,7 +5,7 @@ import sentry_sdk
 
 SENTRY_DSN = os.environ.get('SENTRY_DSN')
 SENTRY_ENV = os.environ.get('SENTRY_ENV')
-EVENT_LEVEL = logging.ERROR
+EVENT_LEVEL = 40
 SENTRY_TAGS = {
     'app_name': os.environ.get('APP_LABEL', 'taskq-queue-server'),
 }

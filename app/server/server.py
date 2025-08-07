@@ -1,12 +1,13 @@
 import threading
 from concurrent.futures import ThreadPoolExecutor
 import socket
-import logging
+
+import structlog
 
 from settings.logs import configure_logger
 from .session import Session
 
-logger = logging.getLogger('TcpServer')
+logger = structlog.get_logger('TcpServer')
 
 
 class TcpServer:
@@ -37,8 +38,8 @@ class TcpServer:
                 session_handler.on_disconnected += self.remove_session
                 # Используем пул потоков вместо создания нового потока
                 self.executor.submit(session_handler.handle, client_socket)
-        except Exception as exc:
-            logger.exception(exc, exc_info=True)
+        except Exception:
+            logger.exception('unexpected error')
         finally:
             self.stop()
 
@@ -72,4 +73,4 @@ class TcpServer:
 
         self.server_socket.close()
         self.executor.shutdown(wait=True)
-        logger.info("Server stopped")
+        logger.info('Server stopped')
