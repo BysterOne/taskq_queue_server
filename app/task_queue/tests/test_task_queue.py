@@ -1,5 +1,6 @@
+from datetime import datetime, timedelta
+
 import pytest
-from datetime import timedelta, datetime
 
 from task_queue.queue import TaskQueue
 

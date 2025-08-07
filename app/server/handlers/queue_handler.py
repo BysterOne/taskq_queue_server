@@ -1,7 +1,9 @@
 from task_queue.manager import QueueManager
-from .base_handler import BaseHandler
+
 from .. import opcodes
 from ..opcode_utils import register
+from .base_handler import BaseHandler
+
 
 @register(opcodes.CMSG_QUEUE_CREATE_REQUEST)
 class QueueCreateRequestHandler(BaseHandler):

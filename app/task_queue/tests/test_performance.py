@@ -1,6 +1,8 @@
 import time
+
 import pytest
 import structlog
+
 from task_queue.node import TaskNode
 from task_queue.queue import TaskQueue
 

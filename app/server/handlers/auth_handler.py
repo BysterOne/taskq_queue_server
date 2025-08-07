@@ -1,6 +1,6 @@
-from .base_handler import BaseHandler
 from .. import opcodes
 from ..opcode_utils import register
+from .base_handler import BaseHandler
 
 
 @register(opcodes.CMSG_AUTH_REQUEST)
