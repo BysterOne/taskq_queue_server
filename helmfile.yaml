@@ -1,0 +1,46 @@
+---
+
+helmDefaults:
+  atomic: true
+  cleanupOnFail: {{ env "HELMFILE_CLEANUPONFAIL" | default true }}
+  timeout: {{ env "HELMFILE_TIMEOUT" | default 300 }}
+  wait: {{ env "HELMFILE_WAIT" | default true }}
+  waitForJobs: {{ env "HELMFILE_WAIT_JOBS" | default true }}
+  historyMax: 3
+
+environments:
+  {{ .Environment.Name }}:
+    missingFileHandler: Error
+    values:
+      - helm/environments/common_values.yaml
+      - helm/environments/{{ .Environment.Name }}/values.yaml
+    secrets:
+      - helm/environments/{{ .Environment.Name }}/secrets.yaml
+
+repositories:
+  - name: invoice
+    url: git+https://gitlab-ci-token:{{ requiredEnv "CI_JOB_TOKEN" }}@moon.invoice.su/k8s/stateless-app?sparse=1&ref=master
+
+---
+
+templates:
+  default: &default_chart_conf
+    namespace: {{ .Values.namespace }}
+    missingFileHandler: Error
+    values:
+      - helm/values/{{`{{ .Release.Name }}`}}.yaml.gotmpl
+    valuesTemplate:
+      - fullnameOverride: '{{`{{ .Release.Name }}`}}'
+      - nameOverride: '{{`{{ .Release.Name }}`}}'
+
+releases:
+  - <<: *default_chart_conf
+    name: altyn-moneta-processing
+    chart: invoice/stateless-app
+    version: {{ env "CI_COMMIT_TAG" | default "1.0.0" }}
+    installed: {{ .Values.myApp.enabled }}
+  - <<: *default_chart_conf
+    name: altyn-moneta-celery
+    chart: invoice/stateless-app
+    version: {{ env "CI_COMMIT_TAG" | default "1.0.0" }}
+    installed: {{ .Values.myApp.enabled }}

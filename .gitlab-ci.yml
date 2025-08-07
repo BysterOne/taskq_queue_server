@@ -1,0 +1,93 @@
+stages:
+  - build
+  - deploy
+  - test
+
+include:
+  - project: docker/includes
+    ref: master
+    file:
+      - build-docker.yml
+  - template: Jobs/Dependency-Scanning.latest.gitlab-ci.yml
+
+docker-build:
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+    GIT_SUBMODULE_DEPTH: 1
+    GIT_STRATEGY: clone
+
+deploy:
+  image: ghcr.io/helmfile/helmfile:v0.156.0
+  stage: deploy
+  environment: yandex
+  before_script:
+    - chmod 600 $KUBECONFIG
+    - helm plugin uninstall diff
+    - helm plugin uninstall secrets
+    - helm plugin uninstall helm-git
+    - helm plugin install https://github.com/databus23/helm-diff
+    - helm plugin install https://github.com/jkroepke/helm-secrets
+    - helm plugin install https://github.com/aslafy-z/helm-git
+    - curl -sSL https://hub.mcs.mail.ru/repository/client-keystone-auth/latest/linux/client-install.sh | bash
+    - mv /helm/vk-cloud-solutions/bin/kubectl-auth_proxy /usr/local/bin/kubectl-auth_proxy
+    - mv /helm/vk-cloud-solutions/bin/client-keystone-auth /usr/local/bin/client-keystone-auth
+  script:
+    - echo "Deploying"
+    - gpg --batch --import $GPG_KEY_PATH
+    - export IMAGE_NAME=$(echo $HARBOR_HOST/$CI_PROJECT_PATH:$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA)
+    - helmfile -e production sync
+  only:
+    - master
+
+lint-pytest-coverage:
+  image: docker:latest
+  stage: test
+  script:
+    - |
+        echo PSQL_NAME=taskq >> .env
+        echo PSQL_HOST=psql >> .env
+        echo PSQL_USER=postgres >> .env
+        echo PSQL_PASS=123 >> .env
+        echo REDIS_HOST=redis >> .env
+        echo REDIS_PORT=6379 >> .env
+        echo REDIS_PASS=123 >> .env
+        echo DJANGO_SECRET_KEY=12978h12389h1289312389 >> .env
+        echo COMPOSE_PROJECT_NAME=$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA >> .env
+    - echo "$HARBOR_PASSWORD" | docker login $HARBOR_HOST -u "$HARBOR_USERNAME" --password-stdin
+    - alias dcci='docker compose -f docker-compose.yml -f docker-compose.ci.yml'
+    - dcci pull -q
+    - dcci up app -d
+    - dcci exec -T app /srv/app/wait-for-it.sh psql:5432 -t 120
+    - dcci exec -T app python manage.py migrate
+    - dcci exec -T app pytest --cov --cov-report term --cov-report xml:coverage-report.xml --junitxml=test-report.xml
+    - dcci cp app:/srv/app/coverage-report.xml ./coverage-report.xml
+    - dcci cp app:/srv/app/test-report.xml ./test-report.xml
+    - dcci exec -T app ruff check --output-format=gitlab --exit-zero -o lint.json .
+    - dcci cp app:/srv/app/lint.json ./lint.json
+  after_script:
+    - docker compose -f docker-compose.yml -f docker-compose.ci.yml down --volumes
+    - docker logout $HARBOR_HOST
+    - docker image prune -a -f
+    - docker builder prune -f
+  artifacts:
+    access: developer
+    expire_in: 1 week
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage-report.xml
+      junit: test-report.xml
+      codequality: lint.json
+  coverage: '/TOTAL.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH != "master"'
+
+gemnasium-python-dependency_scanning:
+  variables:
+    DS_ENFORCE_NEW_ANALYZER: "true"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH != "master"'

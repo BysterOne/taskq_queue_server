@@ -1,5 +1,0 @@
-twisted
-memory-profiler
-pyflakes
-twisted-dev-tools
-structlog
