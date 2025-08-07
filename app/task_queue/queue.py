@@ -122,19 +122,13 @@ class TaskQueue:
             self._first.prev = task
         self._first = task
 
-    def get_tasks(self, from_task: TaskNode = None, to_task: TaskNode = None) -> Iterator[TaskNode]:
+    def get_tasks(self, from_task: TaskNode | None = None, to_task: TaskNode | None = None) -> Iterator[TaskNode]:
         with self._lock:
             current = from_task or self._first
-            if not current:
-                return []
-
-            tasks = []
-            while True:
-                tasks.append(current)
-                if current == to_task or current == self._last or current.next is None:
-                    break
+            after = to_task.next if to_task else None
+            while current and current is not after:
+                yield current
                 current = current.next
-            return iter(tasks)
 
     @property
     def first_task(self) -> Optional[TaskNode]:
