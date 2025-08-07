@@ -3,6 +3,7 @@ import time
 
 import pytest
 import structlog
+from structlog.testing import capture_logs
 
 from task_queue.node import TaskNode
 from task_queue.queue import TaskQueue
@@ -116,8 +117,9 @@ PERFORMANCE_FUNCS = [
 ]
 
 
-def test_performance(f_large_queue: TaskQueue, caplog) -> None:
-    with caplog.at_level("INFO"):
+def test_performance(f_large_queue: TaskQueue) -> None:
+    with capture_logs() as logs:
         for func in PERFORMANCE_FUNCS:
             measure_performance(f_large_queue, func)
-    assert caplog.text.count("elapsed_time") == len(PERFORMANCE_FUNCS)
+    count = sum("elapsed_time" in log for log in logs)
+    assert count == len(PERFORMANCE_FUNCS)
