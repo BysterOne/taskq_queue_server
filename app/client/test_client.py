@@ -143,7 +143,7 @@ def test_multithreaded(f_auth_client, f_queue_factory):
     def worker(runner_id: int) -> None:
         for i in range(100):
             f_auth_client.add_task(1, runner_id * 100 + i, 60.0, 162030.0)
-            f_auth_client.get_task(1, i)
+            f_auth_client.get_task(1, runner_id * 100 + i)
             f_auth_client.delete_task(1, runner_id * 100 + i)
 
     futures = [ThreadPoolExecutor(max_workers=20).submit(worker, i) for i in range(100)]
