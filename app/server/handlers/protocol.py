@@ -194,5 +194,5 @@ class Protocol:
         self.client_socket.setblocking(True)
     
     def send(self):
-        self.client_socket.send(self._write_buffer)
-        self._write_buffer = b''
+        self.client_socket.sendall(self._write_buffer)
+        self._write_buffer = b""
