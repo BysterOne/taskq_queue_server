@@ -38,15 +38,8 @@ ruff = "^0.11.7"
 
 [tool.ruff]
 line-length = 120
-lint.select = [
-  "W","ARG","ANN","ASYNC","B","COM","C4","C90","DTZ",
-  "E","ERA","F","UP","T10","T20","Q","S","I","N","YTT","PTH"
-]
-lint.ignore = [
-  "UP037","W291","ANN401","S101","Q000","DTZ001",
-  "ARG001","ARG002","PTH118","S105","DTZ005","ERA001",
-  "PTH123","S106","DTZ007","B017","B904","B005","S113"
-]
+lint.select = ["E"]
+lint.ignore = ["UP007"]
 lint.exclude = [
   ".git",".mypy_cache",".ruff_cache","__pycache__",
   "templates","fixtures.py","**/fixtures/**","smsc_api.py","**/migrations/**"
