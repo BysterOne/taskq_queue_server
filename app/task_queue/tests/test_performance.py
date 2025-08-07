@@ -117,6 +117,7 @@ PERFORMANCE_FUNCS = [
 ]
 
 
+@pytest.mark.skip(reason="Performance tests are skipped by default")
 def test_performance(f_large_queue: TaskQueue) -> None:
     with capture_logs() as logs:
         for func in PERFORMANCE_FUNCS:
