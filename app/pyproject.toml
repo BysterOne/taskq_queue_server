@@ -1,0 +1,29 @@
+[project]
+name = "taskq-queue-server"
+version = "1.0.0"
+readme = "README.md"
+description = "TaskQ queue server for processing tasks"
+dynamic = ["dependencies", "requires-python"]
+
+[tool.poetry]
+package-mode = false
+
+[[tool.poetry.source]]
+name = "pypi"
+priority = "primary"
+
+[tool.poetry.dependencies]
+python = "3.12.*"
+
+twisted = "^25.5.0"
+memory-profiler = "^0.61.0"
+pyflakes = "^3.4.0"
+twisted-dev-tools = "^0.0.2"
+structlog = "^25.4.0"
+
+[tool.ruff]
+extend = "./apps/core/pyproject.toml"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
