@@ -3,4 +3,4 @@ class BaseHandler:
         self.session = session
 
     def handle(self):
-        raise NotImplemented("Method not implemented")
+        raise NotImplementedError("Method not implemented")
