@@ -213,9 +213,10 @@ class TestMultithreadedClient(BaseTestClient):
             print(f"{thread_id=} started")
             print(f"{runner_id=} start")
             for i in range(1):
-                self.client.add_task(1, runner_id * 100 + i, 60.0, 162030.0)
-                self.client.get_task(1, i)
-                self.client.delete_task(1, runner_id * 100 + i)
+                task_id = runner_id * 100 + i
+                self.client.add_task(1, task_id, 60.0, 162030.0)
+                self.client.get_task(1, task_id)
+                self.client.delete_task(1, task_id)
             print(f"{runner_id=} done")
 
         futures = []

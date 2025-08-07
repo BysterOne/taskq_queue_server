@@ -1,7 +1,16 @@
 import threading
+from functools import wraps
 from typing import Optional, Iterator
 
 from .node import TaskNode
+
+
+def synchronized(fn):
+    @wraps(fn)
+    def wrapper(self, *args, **kwargs):
+        with self._lock:
+            return fn(self, *args, **kwargs)
+    return wrapper
 
 
 class TaskIndex:
@@ -28,7 +37,11 @@ class TaskQueue:
 
     def __init__(self):
         self._index = TaskIndex()
+        self._lock = threading.RLock()
+        self._first = None
+        self._last = None
 
+    @synchronized
     def add_task(self, task: TaskNode, prev_task: Optional[TaskNode] = None):
         if self._index.get(task.id) is not None:
             raise ValueError(f"Task with id {task.id} already exists in the queue")
@@ -55,9 +68,11 @@ class TaskQueue:
         if prev_task is self._last:
             self._last = task
 
+    @synchronized
     def get_task(self, task_id: int) -> TaskNode | None:
         return self._index.get(task_id)
 
+    @synchronized
     def unlink_task(self, task: TaskNode):
         if not self.task_exists(task.id):
             raise ValueError(f"Task with id {task.id} does not exist in the queue")
@@ -72,14 +87,17 @@ class TaskQueue:
         if task is self._last:
             self._last = task.prev
 
+    @synchronized
     def delete_task(self, task: TaskNode) -> Optional[TaskNode]:
         self.unlink_task(task)
         self._index.delete(task.id)
         return task.next
 
+    @synchronized
     def task_exists(self, task_id: int) -> bool:
         return self._index.get(task_id) is not None
 
+    @synchronized
     def update_task(self, task: TaskNode):
         original = self.get_task(task.id)
         if original is None:
@@ -87,6 +105,7 @@ class TaskQueue:
         original.duration = task.duration
         original.done_date = task.done_date
 
+    @synchronized
     def move_task(self, task: TaskNode, prev_task: Optional[TaskNode] = None):
         self.unlink_task(task)
 
@@ -104,20 +123,25 @@ class TaskQueue:
         self._first = task
 
     def get_tasks(self, from_task: TaskNode = None, to_task: TaskNode = None) -> Iterator[TaskNode]:
-        current = from_task or self._first
-        if not current:
-            return []
+        with self._lock:
+            current = from_task or self._first
+            if not current:
+                return []
 
-        while True:
-            yield current
-            if current == to_task or current == self._last or current.next is None:
-                break
-            current = current.next
+            tasks = []
+            while True:
+                tasks.append(current)
+                if current == to_task or current == self._last or current.next is None:
+                    break
+                current = current.next
+            return iter(tasks)
 
     @property
     def first_task(self) -> Optional[TaskNode]:
-        return self._first
+        with self._lock:
+            return self._first
 
     @property
     def latest_task(self) -> Optional[TaskNode]:
-        return self._last
+        with self._lock:
+            return self._last
