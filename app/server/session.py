@@ -1,10 +1,12 @@
-import logging
 import threading
 import time
 from socket import socket
 
+import structlog
+
 from utils.events import Event
-from .handlers.exceptions import ServerException, DisconnectedException
+
+from .handlers.exceptions import DisconnectedException, ServerException
 from .handlers.protocol import Protocol
 from .opcode_utils import opcodes_map
 from .serverconfig import ServerConfig
@@ -15,7 +17,7 @@ class Session(Protocol):
         super().__init__(client_socket)
         self.addr = addr
         self.config = config
-        self.logger = logging.getLogger("Session")
+        self.logger = structlog.get_logger("Session")
         self.on_connected = Event()
         self.on_disconnected = Event()
         self.is_authenticated = False
@@ -25,35 +27,35 @@ class Session(Protocol):
 
     def handle(self, client_socket):
         try:
-            self.logger.info(f"Client {self.addr} connected")
+            self.logger.info('Client connected', addr=self.addr)
             self.on_connected(self)
             while self.is_connected:
                 self.lock.acquire(True, 1)
                 start_time = time.time()
                 opcode = self.read_opcode()
-                self.logger.info(f"Received opcode {opcode} in {time.time() - start_time:.4f} seconds")
+                self.logger.info('Received opcode', opcode=opcode, duration=time.time() - start_time)
 
                 start_time = time.time()
                 if opcode not in opcodes_map:
-                    self.logger.warning(f"Unknown opcode: {opcode}")
+                    self.logger.warning('Unknown opcode', opcode=opcode)
                     break
 
                 handler = opcodes_map[opcode](self)
                 handler.handle()
-                self.logger.info(f"Opcode {opcode} handled in {time.time() - start_time:.4f} seconds")
+                self.logger.info('Opcode handled', opcode=opcode, duration=time.time() - start_time)
                 self.lock.release()
         except DisconnectedException:
             # произошел дисконнект, ничего делать не нужно
             pass
         except ConnectionResetError:
             pass
-        except ServerException as exc:
-            self.logger.exception(exc, exc_info=True)
-        except Exception as exc:
-            self.logger.exception(exc, exc_info=True)
+        except ServerException:
+            self.logger.exception('server error')
+        except Exception:
+            self.logger.exception('unexpected error')
         finally:
             client_socket.close()
-            self.logger.info(f"Client {self.addr} disconnected")
+            self.logger.info('Client disconnected', addr=self.addr)
             self.on_disconnected(self)
             if self.lock.locked():
                 self.lock.release()

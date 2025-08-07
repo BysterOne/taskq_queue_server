@@ -1,10 +1,11 @@
 import socket
 import threading
+from dataclasses import dataclass
 from functools import wraps
 
 from app.server.handlers.protocol import Protocol
+
 from server import opcodes
-from dataclasses import dataclass
 
 
 def synchronized(fn):
@@ -187,11 +188,8 @@ class Client(Protocol):
             if prev_task is not None:
                 prev_task.next_id = task.id
                 task.prev_id = prev_task.id
-
-            if prev_task is None:
-                prev_task = task
-
             tasks.append(task)
+            prev_task = task
         return tasks
 
     @synchronized
