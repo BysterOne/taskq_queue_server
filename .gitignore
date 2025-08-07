@@ -139,3 +139,5 @@ spr_db
 # IDE
 *.code-workspace
 .history
+
+.DS_Store
