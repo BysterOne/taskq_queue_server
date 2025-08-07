@@ -188,11 +188,8 @@ class Client(Protocol):
             if prev_task is not None:
                 prev_task.next_id = task.id
                 task.prev_id = prev_task.id
-
-            if prev_task is None:
-                prev_task = task
-
             tasks.append(task)
+            prev_task = task
         return tasks
 
     @synchronized
