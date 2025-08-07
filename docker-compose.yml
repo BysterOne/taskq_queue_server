@@ -1,0 +1,30 @@
+version: '3.7'
+
+x-container: &container
+  restart: always
+  logging:
+    options:
+      max-size: '100m'
+      max-file: '3'
+    driver: json-file
+
+services:
+  queue_server:
+    <<: *container
+    # image: registry.gitlab.com/username/project:latest
+    command: python run_server.py
+    expose:
+      - 9999
+    env_file:
+      - .env
+    environment:
+      PYTHONUNBUFFERED: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONIOENCODING: "UTF-8"
+    networks:
+      taskq:
+    volumes:
+      - ./volumes/queue_server:/srv/data
+
+networks:
+  taskq:
