@@ -1,0 +1,28 @@
+[run]
+omit =
+    **/migrations/*
+    **/*_tests.py
+    **/management/commands/*
+    **/stub_*.py
+    **/settings/*.py
+    **/conf/*.py
+    **/*.conf.py
+    **/manage.py
+    **/uvicorn_worker.py
+    **/gunicorn_worker.py
+    **/admin_ext/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    if TYPE_CHECKING:
+    def __repr__
+    if settings.DEBUG:
+    if DEBUG:
+    raise NotImplementedError
+    if 0:
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    @(abc\.)?abstractmethod
+    def __str__
+    if DEBUG

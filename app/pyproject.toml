@@ -1,0 +1,67 @@
+[project]
+name = "taskq-queue-server"
+version = "1.0.0"
+readme = "README.md"
+description = "TaskQ queue server for processing tasks"
+dynamic = ["dependencies", "requires-python"]
+
+[tool.poetry]
+package-mode = false
+
+[[tool.poetry.source]]
+name = "pypi"
+priority = "primary"
+
+[tool.poetry.dependencies]
+python = "3.12.*"
+
+twisted = "^25.5.0"
+memory-profiler = "^0.61.0"
+pyflakes = "^3.4.0"
+twisted-dev-tools = "^0.0.2"
+
+# tracing/logging
+datadog = "^0.49.1"
+sentry-sdk = "^2.27.0"
+structlog = "^25.2.0"
+structlog-sentry = "^2.2.1"
+
+# TDD
+pytest-mock = "^3.14.0"
+pytest-cov = "^6.1.1"
+requests-mock = "^1.12.1"
+factory-boy = "^3.3.3"
+freezegun = "^1.5.1"
+
+# linters
+ruff = "^0.11.7"
+
+[tool.ruff]
+line-length = 120
+lint.select = [
+  "W","ARG","ANN","ASYNC","B","COM","C4","C90","DTZ",
+  "E","ERA","F","UP","T10","T20","Q","S","I","N","YTT","PTH"
+]
+lint.ignore = [
+  "UP037","W291","ANN401","S101","Q000","DTZ001",
+  "ARG001","ARG002","PTH118","S105","DTZ005","ERA001",
+  "PTH123","S106","DTZ007","B017","B904","B005","S113"
+]
+lint.exclude = [
+  ".git",".mypy_cache",".ruff_cache","__pycache__",
+  "templates","fixtures.py","**/fixtures/**","smsc_api.py","**/migrations/**"
+]
+lint.fixable = ["ALL"]
+lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+target-version = "py312"
+
+[tool.ruff.lint.mccabe]
+# max-complexity = 6
+
+[tool.ruff.format]
+quote-style = "single"
+docstring-code-format = true
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

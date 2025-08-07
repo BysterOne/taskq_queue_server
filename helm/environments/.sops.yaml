@@ -1,0 +1,6 @@
+---
+
+creation_rules:
+  - path_regex: ^(.+/)?secrets\.yaml$
+    pgp: >-
+      776B853737F2D613B88BB2B966721F747FE3B688

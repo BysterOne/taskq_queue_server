@@ -1,0 +1,25 @@
+namespace: altyn
+replicaCount: 2
+
+env:
+  REDIS_HOST: redis-altyn-cluster-redis-haproxy.infra.svc
+  REDIS_PORT: 6379
+
+  PSQL_NAME: altyn
+  PSQL_HOST: cnpg-cluster-rw.infra.svc.cluster.local
+  PSQL_PORT: 5432
+  PSQL_USER: postgres
+
+  CELERY_BROKER_HOST: altyn-cluster-rabbitmq.infra.svc
+  CELERY_BROKER_USER: moneta-processing
+  CELERY_BROKER_VHOST: moneta-processing
+
+  VIRTUAL_HOST: moneta-processing.altyn.one
+  HTTP_HOST: https://moneta-processing.altyn.one
+  SENTRY_ENV: production
+  LOG_FORMATTER: json
+  MONITORING_STATSD_HOST: altyn-moneta-processing-statsd.altyn.svc
+  SENTRY_DSN: https://03f1ce84df03ac7c7beaa5bd5bcbff2d@sentry.invoice.su/21
+
+  MONETA_USERNAME: info@ochamchyra.com
+  MONETA_URL: https://service.moneta.ru/services
