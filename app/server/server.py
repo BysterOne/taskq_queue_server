@@ -3,9 +3,10 @@ from concurrent.futures import ThreadPoolExecutor
 import socket
 import logging
 
+from settings.logs import configure_logger
 from .session import Session
 
-logger = logging.getLogger("TcpServer")
+logger = logging.getLogger('TcpServer')
 
 
 class TcpServer:
@@ -13,7 +14,7 @@ class TcpServer:
         self.host = host
         self.port = port
         self.config = config
-        self.setup_logging()
+        configure_logger()
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server_socket.bind((host, port))
@@ -22,9 +23,6 @@ class TcpServer:
         self.is_running = True
         self.executor = ThreadPoolExecutor(max_workers=max_workers)
         self.sessions_lock = threading.Lock()
-
-    def setup_logging(self):
-        logging.basicConfig(level=logging.INFO)
 
     def start(self):
         try:

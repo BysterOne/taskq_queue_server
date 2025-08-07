@@ -3,7 +3,6 @@ import os
 
 import sentry_sdk
 import structlog
-from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 from structlog_sentry import SentryProcessor
 
@@ -46,15 +45,10 @@ def configure_logger(log_level: str = 'INFO', env_profile: str = 'dev') -> None:
             debug=False,
             environment=env_profile,
             dsn=sentryconfig.SENTRY_DSN,
-            integrations=[
-                DjangoIntegration(cache_spans=True),
-                LoggingIntegration(event_level=None, level=None),
-            ],
-            ignore_errors=[],
+            integrations=[LoggingIntegration(event_level=None, level=None)],
             before_send=sentryconfig.before_send,
             before_send_transaction=sentryconfig.before_send_transaction,
             traces_sample_rate=1.0,
-            profiles_sample_rate=1.0,
             send_default_pii=True,
             auto_session_tracking=True,
         )
