@@ -7,10 +7,9 @@ class Event:
         return self
 
     def disconnect(self, handler):
-        # noinspection PyBroadException
         try:
             self.handlers.remove(handler)
-        except:
+        except KeyError:
             pass
         return self
 
