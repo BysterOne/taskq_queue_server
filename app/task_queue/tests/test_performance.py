@@ -1,9 +1,11 @@
 import time
 import pytest
+import structlog
 from task_queue.node import TaskNode
 from task_queue.queue import TaskQueue
 
 memory_usage = pytest.importorskip("memory_profiler").memory_usage
+logger = structlog.get_logger(__name__)
 
 
 @pytest.fixture
@@ -20,7 +22,12 @@ def measure_performance(queue: TaskQueue, func, *args) -> None:
     func(queue, *args)
     elapsed_time = time.time() - start_time
     used_memory = memory_usage()[0] - start_memory
-    print(f"{func.__name__}: Time elapsed: {elapsed_time} seconds, Memory used: {used_memory} MiB")
+    logger.info(
+        "performance",
+        function=func.__name__,
+        elapsed_time=elapsed_time,
+        used_memory=used_memory,
+    )
 
 
 def get_first_100_tasks(queue: TaskQueue) -> None:
