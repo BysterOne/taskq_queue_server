@@ -1,19 +1,30 @@
+import logging
 import time
 
 import pytest
 import structlog
+from structlog.testing import capture_logs
 
 from task_queue.node import TaskNode
 from task_queue.queue import TaskQueue
 
+QUEUE_SIZE = 10_000
+
 memory_usage = pytest.importorskip("memory_profiler").memory_usage
+
+logging.basicConfig(format="%(message)s")
+structlog.configure(
+    wrapper_class=structlog.make_filtering_bound_logger(logging.INFO),
+    logger_factory=structlog.stdlib.LoggerFactory(),
+)
+
 logger = structlog.get_logger(__name__)
 
 
 @pytest.fixture
 def f_large_queue() -> TaskQueue:
     queue = TaskQueue()
-    for i in range(1, 10000001):
+    for i in range(1, QUEUE_SIZE + 1):
         queue.add_task(TaskNode(i, 10))
     return queue
 
@@ -53,12 +64,12 @@ def modify_first_100_tasks(queue: TaskQueue) -> None:
 
 
 def add_100_tasks_to_start(queue: TaskQueue) -> None:
-    for i in range(10000001, 10000101):
+    for i in range(QUEUE_SIZE + 1, QUEUE_SIZE + 101):
         queue.add_task(TaskNode(i, 10), None)
 
 
 def add_100_tasks_to_end(queue: TaskQueue) -> None:
-    for i in range(10000101, 10000201):
+    for i in range(QUEUE_SIZE + 101, QUEUE_SIZE + 201):
         queue.add_task(TaskNode(i, 10))
 
 
@@ -86,21 +97,29 @@ def move_100_tasks_from_end_to_start(queue: TaskQueue) -> None:
 
 
 def move_100_tasks_from_middle_to_middle(queue: TaskQueue) -> None:
-    for i in range(500000, 500100):
+    start = QUEUE_SIZE // 2
+    for i in range(start, start + 100):
         task = queue.get_task(i)
-        queue.move_task(task, queue.get_task(999999 - i))
+        queue.move_task(task, queue.get_task(QUEUE_SIZE - 1 - i))
+
+PERFORMANCE_FUNCS = [
+    get_first_100_tasks,
+    get_all_tasks,
+    check_existence_of_100_tasks,
+    modify_first_100_tasks,
+    add_100_tasks_to_start,
+    add_100_tasks_to_end,
+    remove_100_tasks_from_end,
+    remove_100_tasks_from_10_to_110,
+    move_100_tasks_from_start_to_end,
+    move_100_tasks_from_end_to_start,
+    move_100_tasks_from_middle_to_middle,
+]
 
 
-@pytest.mark.skip(reason="performance test")
 def test_performance(f_large_queue: TaskQueue) -> None:
-    measure_performance(f_large_queue, get_first_100_tasks)
-    measure_performance(f_large_queue, get_all_tasks)
-    measure_performance(f_large_queue, check_existence_of_100_tasks)
-    measure_performance(f_large_queue, modify_first_100_tasks)
-    measure_performance(f_large_queue, add_100_tasks_to_start)
-    measure_performance(f_large_queue, add_100_tasks_to_end)
-    measure_performance(f_large_queue, remove_100_tasks_from_end)
-    measure_performance(f_large_queue, remove_100_tasks_from_10_to_110)
-    measure_performance(f_large_queue, move_100_tasks_from_start_to_end)
-    measure_performance(f_large_queue, move_100_tasks_from_end_to_start)
-    measure_performance(f_large_queue, move_100_tasks_from_middle_to_middle)
+    with capture_logs() as logs:
+        for func in PERFORMANCE_FUNCS:
+            measure_performance(f_large_queue, func)
+    count = sum("elapsed_time" in log for log in logs)
+    assert count == len(PERFORMANCE_FUNCS)
