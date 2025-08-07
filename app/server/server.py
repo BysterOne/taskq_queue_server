@@ -1,10 +1,11 @@
+import socket
 import threading
 from concurrent.futures import ThreadPoolExecutor
-import socket
 
 import structlog
 
 from settings.logs import configure_logger
+
 from .session import Session
 
 logger = structlog.get_logger('TcpServer')

@@ -1,13 +1,13 @@
 import threading
 from functools import wraps
-from typing import Optional, Iterator
+from typing import Any, Callable, Iterator, Optional
 
 from .node import TaskNode
 
 
-def synchronized(fn):
+def synchronized(fn: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(fn)
-    def wrapper(self, *args, **kwargs):
+    def wrapper(self, *args: Any, **kwargs: Any) -> Any:
         with self._lock:
             return fn(self, *args, **kwargs)
     return wrapper
@@ -16,16 +16,16 @@ def synchronized(fn):
 class TaskIndex:
     _tasks: dict[int, TaskNode]
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._tasks = {}
 
     def get(self, task_id: int) -> TaskNode | None:
         return self._tasks.get(task_id, None)
 
-    def set(self, task_id: int, task: TaskNode):
+    def set(self, task_id: int, task: TaskNode) -> None:
         self._tasks[task_id] = task
 
-    def delete(self, task_id: int):
+    def delete(self, task_id: int) -> None:
         del self._tasks[task_id]
 
 
@@ -35,14 +35,14 @@ class TaskQueue:
     _index: TaskIndex
     _lock: threading.Lock
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._index = TaskIndex()
         self._lock = threading.RLock()
         self._first = None
         self._last = None
 
     @synchronized
-    def add_task(self, task: TaskNode, prev_task: Optional[TaskNode] = None):
+    def add_task(self, task: TaskNode, prev_task: Optional[TaskNode] = None) -> None:
         if self._index.get(task.id) is not None:
             raise ValueError(f"Task with id {task.id} already exists in the queue")
 
@@ -73,7 +73,7 @@ class TaskQueue:
         return self._index.get(task_id)
 
     @synchronized
-    def unlink_task(self, task: TaskNode):
+    def unlink_task(self, task: TaskNode) -> None:
         if not self.task_exists(task.id):
             raise ValueError(f"Task with id {task.id} does not exist in the queue")
 
@@ -98,7 +98,7 @@ class TaskQueue:
         return self._index.get(task_id) is not None
 
     @synchronized
-    def update_task(self, task: TaskNode):
+    def update_task(self, task: TaskNode) -> None:
         original = self.get_task(task.id)
         if original is None:
             raise ValueError(f"Task with id {task.id} does not exist in the queue")
@@ -106,7 +106,7 @@ class TaskQueue:
         original.done_date = task.done_date
 
     @synchronized
-    def move_task(self, task: TaskNode, prev_task: Optional[TaskNode] = None):
+    def move_task(self, task: TaskNode, prev_task: Optional[TaskNode] = None) -> None:
         self.unlink_task(task)
 
         if prev_task:
@@ -122,7 +122,7 @@ class TaskQueue:
             self._first.prev = task
         self._first = task
 
-    def get_tasks(self, from_task: TaskNode = None, to_task: TaskNode = None) -> Iterator[TaskNode]:
+    def get_tasks(self, from_task: TaskNode | None = None, to_task: TaskNode | None = None) -> Iterator[TaskNode]:
         with self._lock:
             current = from_task or self._first
             if not current:

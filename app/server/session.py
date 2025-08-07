@@ -5,7 +5,8 @@ from socket import socket
 import structlog
 
 from utils.events import Event
-from .handlers.exceptions import ServerException, DisconnectedException
+
+from .handlers.exceptions import DisconnectedException, ServerException
 from .handlers.protocol import Protocol
 from .opcode_utils import opcodes_map
 from .serverconfig import ServerConfig
@@ -48,7 +49,7 @@ class Session(Protocol):
             pass
         except ConnectionResetError:
             pass
-        except ServerException as exc:
+        except ServerException:
             self.logger.exception('server error')
         except Exception:
             self.logger.exception('unexpected error')

@@ -118,7 +118,7 @@ def client(host: str, port: int):
         logger.info("Client Write float time", duration=time.time() - start_time)
 
         start_time = time.time()
-        response = protocol.read_float()
+        protocol.read_float()
         logger.info("Client Read float time", duration=time.time() - start_time)
 
         # Отправка и получение int
@@ -131,7 +131,7 @@ def client(host: str, port: int):
         logger.info("Client Write int time", duration=time.time() - start_time)
 
         start_time = time.time()
-        response = protocol.read_int()
+        protocol.read_int()
         logger.info("Client Read int time", duration=time.time() - start_time)
 
         # Отправка и получение short
@@ -142,7 +142,7 @@ def client(host: str, port: int):
         logger.info("Client Write short time", duration=time.time() - start_time)
 
         start_time = time.time()
-        response = protocol.read_opcode()
+        protocol.read_opcode()
         logger.info("Client Read short time", duration=time.time() - start_time)
 
         # Отправка и получение bool
@@ -153,7 +153,7 @@ def client(host: str, port: int):
         logger.info("Client Write bool time", duration=time.time() - start_time)
 
         start_time = time.time()
-        response = protocol.read_bool()
+        protocol.read_bool()
         logger.info("Client Read bool time", duration=time.time() - start_time)
 
         # Отправка и получение string
@@ -164,7 +164,7 @@ def client(host: str, port: int):
         logger.info("Client Write string time", duration=time.time() - start_time)
 
         start_time = time.time()
-        response = protocol.read_string()
+        protocol.read_string()
         logger.info("Client Read string time", duration=time.time() - start_time)
 
     except ConnectionError:

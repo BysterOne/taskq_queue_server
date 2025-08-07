@@ -1,4 +1,3 @@
-import os
 
 import sentry_sdk
 import structlog

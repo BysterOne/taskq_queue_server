@@ -1,10 +1,11 @@
 import socket
 import threading
+from dataclasses import dataclass
 from functools import wraps
 
 from app.server.handlers.protocol import Protocol
+
 from server import opcodes
-from dataclasses import dataclass
 
 
 def synchronized(fn):
